@@ -25,7 +25,7 @@ var lightmap = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/{id}/tiles/{
 lightmap.addTo(myMap);
 
 // call API
-var url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson";
+var url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
 
 // Define a markerSize function that will give each earthquake size based on magnitude
 function markerSize(magnitude) {
@@ -33,51 +33,74 @@ function markerSize(magnitude) {
 }
 
 // Define markerColor function that will give each earthquake color based on depth
-function markerColor(depth){
-  if depth > 90 {
-    return red
-  }
-  else if depth > 70 {
-    return dark orange
-  }
-  else if depth > 50 {
-    return light orange
-  }
-  else if depth > 30 {
-    return yellow
-  }
-  else if depth > 10 {
-    return light green
-  }
-  else {
-    return dark green
-  }
-  
-}
+// added to if statement
 
 // use d3 to get data
-d3.json(url, function(data){
+d3.json(url).then(function(data){
 
-// Loop through locations and create city and state markers
-for (var i = 0; i < data.features.length; i++) {
+  // was instructed to do features.on but could not figure it out within the timeframe
+  L.geoJson(data, {
+    // We turn each feature into a circleMarker on the map.
+    pointToLayer: function(feature, latlng) {
+      return L.circleMarker(latlng);
+    },
+    // We set the style for each circleMarker using our styleInfo function.
+    style: styleInfo,
+    // We create a popup for each marker to display the magnitude and location of the earthquake after the marker has been created and styled
+    onEachFeature: function(feature, layer) {
+      layer.bindPopup("Magnitude: "
+          + feature.properties.mag
+          + "<br>Depth: "
+          + feature.geometry.coordinates[2]
+          + "<br>Location: "
+          + feature.properties.place
+      );
+    }
+  }).addTo(map);
+
+  // Loop through locations and create city and state markers
+  for (var i = 0; i < data.features.length; i++) {
     // declare variables
-    var latitude
-    var longitude
-    var magnitude
-    var depth
-    
-  //Setting the marker radius for the state by passing population into the markerSize function
-  stateMarkers.push(
-    L.circle(locations[i].coordinates, {
+    var lat = data[i].features.geometry.coordinates[1];
+    var lon = data[i].features.geometry.coordinates[0];
+    var latlon = [lat,lon];
+    var mag = data[i].features.properties.mag;
+    var depth = data[i].features.properties.geometry.coordinates[2];
+    var place = data[i].features.properties.place;
+
+    var fill = "";
+    if (depth > 90) {
+      return "red"
+    }
+    else if (depth2 > 70) {
+      return "dark orange"
+    }
+    else if (depth > 50) {
+      return "light orange"
+    }
+    else if (depth > 30) {
+      return "yellow"
+    }
+    else if (depth > 10) {
+      return "light green"
+    }
+    else {
+      return "dark green"
+    }
+
+
+    //Setting the marker radius 
+    L.circle(latlon[i], {
       stroke: false,
       fillOpacity: 0.75,
-      color: "white",
-      // markerColor
-      fillColor: "white",
-      radius: markerSize(locations[i].state.population)
+      color: "fill",
+      // fillColor: "fill",
+      //markerColor(depth2),
+      radius:markerSize(mag)
+      .addto(myMap)
     })
-  );
-})
+  }
+});
 
 // control layer
 
